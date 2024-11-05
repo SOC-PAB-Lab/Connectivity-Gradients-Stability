@@ -28,17 +28,17 @@ library(cowplot)
 Load Gradients (G1,G2,G3) Data
 
 ``` r
-g1 = read.csv('../Brainspace/G1_results_BS_p_20K_20K_Dan.csv')
-unique_names = unique(g1$YeoNets)
-g1$YeoNets = factor(g1$YeoNets, levels = unique_names)
+G1 = read.csv('../Brainspace/G1_results_BS_p_20K_20K_Dan.csv')
+unique_names = unique(G1$YeoNets)
+G1$YeoNets = factor(G1$YeoNets, levels = unique_names)
 
-g2 = read.csv('../Brainspace/G2_results_BS_p_20K_20K_Dan.csv')
-unique_names = unique(g2$YeoNets)
-g2$YeoNets = factor(g2$YeoNets, levels = unique_names)
+G2 = read.csv('../Brainspace/G2_results_BS_p_20K_20K_Dan.csv')
+unique_names = unique(G2$YeoNets)
+G2$YeoNets = factor(G2$YeoNets, levels = unique_names)
 
-g3 = read.csv('../Brainspace/G3_results_BS_p_20K_20K_Dan.csv')
-unique_names = unique(g3$YeoNets)
-g3$YeoNets = factor(g3$YeoNets, levels = unique_names)
+G3 = read.csv('../Brainspace/G3_results_BS_p_20K_20K_Dan.csv')
+unique_names = unique(G3$YeoNets)
+G3$YeoNets = factor(G3$YeoNets, levels = unique_names)
 ```
 
 Prepare Data
@@ -79,9 +79,9 @@ Split the data, and create average per gradient per sessions
 
 ``` r
 # Apply the function to each dataset
-g1_filtered <- prepare_data(g1)
-g2_filtered <- prepare_data(g2)
-g3_filtered <- prepare_data(g3)  
+g1_filtered <- prepare_data(G1)
+g2_filtered <- prepare_data(G2)
+g3_filtered <- prepare_data(G3)  
 
 data <- calculate_all_day_means(g1_filtered, g2_filtered, g3_filtered)
 ```
@@ -101,7 +101,7 @@ pmain <- ggplot(data,aes(G1_Day30,G3_Day30,color=YeoNets,fill=YeoNets))+
 pmain
 ```
 
-![](fig1_gradients_cloud_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](fig1_gradients_cloud_files/figure-gfm/plot_gradient_cloud-1.png)<!-- -->
 
 ``` r
 # Marginal densities along x axis
@@ -132,112 +132,11 @@ p2<- insert_yaxis_grob(p1, ydens, grid::unit(.2, "null"), position = "right")
 ggdraw(p2)
 ```
 
-![](fig1_gradients_cloud_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+![](fig1_gradients_cloud_files/figure-gfm/plot_gradient_cloud-2.png)<!-- -->
 
 ``` r
 #ggsave(file="Paper_Cloud-G1_Day30-G3_Day30.png", p2, width=6, height=5, dpi=400)
 ```
-
-``` r
-filteredData<-data %>% filter(YeoNets != 'LN')
-p5<-ggplot(data, aes(G1_Day3,G3_Day3,color=YeoNets,fill=YeoNets)) +
-  geom_point()+
-  scale_fill_manual(values = c('#CD3E4E','#E69422', '#BE3AFA', '#00760E', '#4682B4', '#781286')) +
-  scale_color_manual(values = c('#CD3E4E','#E69422', '#BE3AFA', '#00760E', '#4682B4', '#781286'))
-
-p5
-```
-
-![](fig1_gradients_cloud_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
-
-``` r
-# Load your data (assuming it is saved as a CSV file)
-# Replace 'your_data_file.csv' with your actual data file path
-df <- data
-
-# Calculate differences between Day 3 and Day 30 for each gradient
-df <- df %>%
-  mutate(G1_Diff = G1_Day30 - G1_Day3,
-         G2_Diff = G2_Day30 - G2_Day3,
-         G3_Diff = G3_Day30 - G3_Day3)
-
-# 1. Scatter Plot to Compare G1 vs G3 for Day 3 and Day 30
-ggplot(df, aes(x = G1_Day30, y = G3_Day30, color = YeoNets)) +
-  geom_point(alpha = 0.6) +
-  labs(title = "G1 vs G3 on Day 30", x = "G1 Day 30", y = "G3 Day 30") +
-  theme_minimal() +
-  scale_color_brewer(palette = "Set1")
-```
-
-![](fig1_gradients_cloud_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
-
-``` r
-# 2. Violin/Box Plot to Show Distribution of Differences
-df_long <- df %>%
-  select(YeoNets, G1_Diff, G2_Diff, G3_Diff) %>%
-  pivot_longer(cols = starts_with("G"), names_to = "Gradient", values_to = "Difference")
-
-ggplot(df_long, aes(x = Gradient, y = Difference, fill = YeoNets)) +
-  geom_violin(trim = FALSE, alpha = 0.5) +
-  geom_boxplot(width = 0.1, position = position_dodge(0.9)) +
-  labs(title = "Distribution of Gradient Differences (Day 30 - Day 3)", x = "Gradient", y = "Difference") +
-  theme_minimal()
-```
-
-![](fig1_gradients_cloud_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
-
-``` r
-# 3. Paired T-Tests (for each gradient)
-t_test_results <- list(
-  G1 = t.test(df$G1_Day3, df$G1_Day30, paired = TRUE),
-  G2 = t.test(df$G2_Day3, df$G2_Day30, paired = TRUE),
-  G3 = t.test(df$G3_Day3, df$G3_Day30, paired = TRUE)
-)
-
-# Print T-test results
-print(t_test_results)
-```
-
-    ## $G1
-    ## 
-    ##  Paired t-test
-    ## 
-    ## data:  df$G1_Day3 and df$G1_Day30
-    ## t = -7.2328, df = 17276, p-value = 4.931e-13
-    ## alternative hypothesis: true mean difference is not equal to 0
-    ## 95 percent confidence interval:
-    ##  -0.08610360 -0.04938562
-    ## sample estimates:
-    ## mean difference 
-    ##     -0.06774461 
-    ## 
-    ## 
-    ## $G2
-    ## 
-    ##  Paired t-test
-    ## 
-    ## data:  df$G2_Day3 and df$G2_Day30
-    ## t = -4.9576, df = 17276, p-value = 7.205e-07
-    ## alternative hypothesis: true mean difference is not equal to 0
-    ## 95 percent confidence interval:
-    ##  -0.05182600 -0.02245663
-    ## sample estimates:
-    ## mean difference 
-    ##     -0.03714132 
-    ## 
-    ## 
-    ## $G3
-    ## 
-    ##  Paired t-test
-    ## 
-    ## data:  df$G3_Day3 and df$G3_Day30
-    ## t = 9.2712, df = 17276, p-value < 2.2e-16
-    ## alternative hypothesis: true mean difference is not equal to 0
-    ## 95 percent confidence interval:
-    ##  0.08687243 0.13345358
-    ## sample estimates:
-    ## mean difference 
-    ##        0.110163
 
 ``` r
 # Reshape data to a long format to make it easier to plot Day 3 and Day 30 together
@@ -269,19 +168,69 @@ ggsave(file = "Paper_comparison_across_days.png", p3, width = 15, height = 8, dp
 p3
 ```
 
-![](fig1_gradients_cloud_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](fig1_gradients_cloud_files/figure-gfm/Comparison%20Across%20Days-1.png)<!-- -->
 
 ``` r
-df_filtered$YeoNets = factor(df_filtered$YeoNets, levels = c('DMN','FPN','SN','DAN','VN','SMN'))
+# Define a helper function to process each gradient data frame
+process_gradient <- function(data, col_names, gradient_label) {
+  data %>%
+    select(all_of(col_names)) %>%
+    pivot_longer(cols = everything(), names_to = "Subject_Session", values_to = "Value") %>%
+    mutate(Day = case_when(
+      grepl("ses.1", Subject_Session) ~ "Day 1",
+      grepl("ses.2", Subject_Session) ~ "Day 3",
+      grepl("ses.3", Subject_Session) ~ "Day 30"
+    ),
+    Gradient = gradient_label)
+}
 
-p2 <- ggplot(df_filtered, aes(x = G2, y = YeoNets, color = Day, fill = Day)) +
-  geom_density_ridges(alpha = 0.3, scale = 3) +
-  scale_x_continuous(expand = c(0, 0)) +
+# Define the main function to get the subject data for each gradient
+get_subject_data <- function(subject_num) {
+  # Define the column names dynamically based on the subject number
+  col_names <- paste0("sub.", subject_num, ".ses.", 1:3)
+  
+  # Process each gradient data frame using the helper function
+  df_g1 <- process_gradient(G1, col_names, "G1")
+  df_g2 <- process_gradient(G2, col_names, "G2")
+  df_g3 <- process_gradient(G3, col_names, "G3")
+  
+  # Combine the data frames
+  combined_df <- bind_rows(df_g1, df_g2, df_g3)
+  
+  # Return the combined data frame
+  return(combined_df)
+}
+
+# Example usage for subject 29
+df_sub10 <- get_subject_data(10)
+print(df_sub10)
+```
+
+    ## # A tibble: 168,435 × 4
+    ##    Subject_Session Value Day    Gradient
+    ##    <chr>           <dbl> <chr>  <chr>   
+    ##  1 sub.10.ses.1    21.3  Day 1  G1      
+    ##  2 sub.10.ses.2    13.2  Day 3  G1      
+    ##  3 sub.10.ses.3     9.18 Day 30 G1      
+    ##  4 sub.10.ses.1     8.04 Day 1  G1      
+    ##  5 sub.10.ses.2     5.78 Day 3  G1      
+    ##  6 sub.10.ses.3     2.08 Day 30 G1      
+    ##  7 sub.10.ses.1     7.73 Day 1  G1      
+    ##  8 sub.10.ses.2    17.8  Day 3  G1      
+    ##  9 sub.10.ses.3     2.03 Day 30 G1      
+    ## 10 sub.10.ses.1    18.6  Day 1  G1      
+    ## # ℹ 168,425 more rows
+
+``` r
+filteredData_G3<- df_sub10 %>% filter(Gradient == 'G3')
+
+p2 <- ggplot(filteredData_G3, aes(x = Value, y = Gradient, color = Day)) +
+  geom_density_ridges(fill = NA,linewidth  =1.5) +
+ scale_x_continuous(limits = c(-25, 35))+
   scale_y_discrete(expand = c(0, 0)) +
-scale_fill_manual(values = c('#1f78b4', '#33a02c', '#6a3d9a')) +
-scale_color_manual(values = c('#1f78b4', '#33a02c', '#6a3d9a'))+
+  scale_color_manual(values = c('#4169E1', '#FF8C00', '#d62728')) +
   coord_cartesian(clip = 'off') +
-  labs(y = '', title = 'G2 - Yeo Networks Across Days') +
+  labs(y = '', title = 'Gradient 3 Across Days') +
   theme_ridges() +
   theme(
     legend.position = 'right',
@@ -291,12 +240,12 @@ scale_color_manual(values = c('#1f78b4', '#33a02c', '#6a3d9a'))+
 p2
 ```
 
-    ## Picking joint bandwidth of 0.693
+    ## Picking joint bandwidth of 1.07
 
-![](fig1_gradients_cloud_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](fig1_gradients_cloud_files/figure-gfm/Gradient%203%20Across%20Days%20For%20Subj%2010-1.png)<!-- -->
 
 ``` r
-ggsave(file="Paper_distribution_diff_G2.png", p2, width=6, height=5, dpi=400)
+ggsave(file="Paper_distribution_diff_All_G3_limited_axis.png", p2, width=6, height=5, dpi=400)
 ```
 
-    ## Picking joint bandwidth of 0.693
+    ## Picking joint bandwidth of 1.07
