@@ -151,10 +151,11 @@ df_filtered <- df_long %>%
 ```
 
 ``` r
-p3 <- ggplot(df_filtered, aes(x = G1, y = G3, color = YeoNets)) +
+filteredData<- df_filtered %>% filter(YeoNets == 'VN')
+p3 <- ggplot(filteredData, aes(x = G1, y = G2, color = YeoNets)) +
   geom_point(alpha = 0.7) +
   facet_wrap(~ Day, ncol = 3) +  # Specify the number of columns (optional, already in 3 columns here)
-  labs(title = "Comparison Across Days", x = "G1", y = "G3") +
+  labs(title = "Comparison Across Days", x = "G1", y = "G2") +
   theme_minimal() +
   scale_fill_manual(values = c('#CD3E4E', '#E69422', '#BE3AFA', '#00760E', '#4682B4', '#781286')) +
   scale_color_manual(values = c('#CD3E4E', '#E69422', '#BE3AFA', '#00760E', '#4682B4', '#781286')) +
@@ -164,7 +165,7 @@ p3 <- ggplot(df_filtered, aes(x = G1, y = G3, color = YeoNets)) +
   )
 
 # Save the plot
-ggsave(file = "Paper_comparison_across_days.png", p3, width = 15, height = 8, dpi = 400)  # Increased width for more space
+#ggsave(file = "Paper_comparison_across_days_G1_G2.png", p3, width = 15, height = 8, dpi = 400)  # Increased width for more space
 p3
 ```
 
@@ -222,15 +223,15 @@ print(df_sub10)
     ## # ℹ 168,425 more rows
 
 ``` r
-filteredData_G3<- df_sub10 %>% filter(Gradient == 'G3')
+filteredData_G3<- df_long %>% filter(Gradient == 'G3')
 
-p2 <- ggplot(filteredData_G3, aes(x = Value, y = Gradient, color = Day)) +
-  geom_density_ridges(fill = NA,linewidth  =1.5) +
- scale_x_continuous(limits = c(-25, 35))+
+p2 <- ggplot(filteredData_G3, aes(x = Value, y = Gradient, linetype = Day)) +
+  geom_density_ridges(color = "black", fill = NA, linewidth = 1.5) +  # Set line color to black
+  scale_x_continuous(limits = c(-25, 35)) +
   scale_y_discrete(expand = c(0, 0)) +
-  scale_color_manual(values = c('#4169E1', '#FF8C00', '#d62728')) +
+  scale_linetype_manual(values = c("solid", "dashed", "dotted")) +  # Set different line types for each day
   coord_cartesian(clip = 'off') +
-  labs(y = '', title = 'Gradient 3 Across Days') +
+  labs(y = '', title = 'Gradient 3 Across Days Average') +
   theme_ridges() +
   theme(
     legend.position = 'right',
@@ -240,12 +241,12 @@ p2 <- ggplot(filteredData_G3, aes(x = Value, y = Gradient, color = Day)) +
 p2
 ```
 
-    ## Picking joint bandwidth of 1.07
+    ## Picking joint bandwidth of 0.808
 
 ![](fig1_gradients_cloud_files/figure-gfm/Gradient%203%20Across%20Days%20For%20Subj%2010-1.png)<!-- -->
 
 ``` r
-ggsave(file="Paper_distribution_diff_All_G3_limited_axis.png", p2, width=6, height=5, dpi=400)
+ggsave(file="Paper_distribution_diff_All_G3_limited_axis_AVG.png", p2, width=6, height=5, dpi=400)
 ```
 
-    ## Picking joint bandwidth of 1.07
+    ## Picking joint bandwidth of 0.808
