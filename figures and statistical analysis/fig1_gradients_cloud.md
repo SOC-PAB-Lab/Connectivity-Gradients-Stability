@@ -152,7 +152,7 @@ df_filtered <- df_long %>%
 
 ``` r
 filteredData<- df_filtered %>% filter(YeoNets == 'VN')
-p3 <- ggplot(filteredData, aes(x = G1, y = G2, color = YeoNets)) +
+p3 <- ggplot(df_filtered, aes(x = G1, y = G2, color = YeoNets)) +
   geom_point(alpha = 0.7) +
   facet_wrap(~ Day, ncol = 3) +  # Specify the number of columns (optional, already in 3 columns here)
   labs(title = "Comparison Across Days", x = "G1", y = "G2") +
