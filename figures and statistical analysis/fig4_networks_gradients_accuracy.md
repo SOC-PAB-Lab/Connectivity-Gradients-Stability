@@ -284,3 +284,219 @@ plot
 ```
 
 ![](fig4_networks_gradients_accuracy_files/figure-gfm/Networks%20Accuracy%20rate%20plots-1.png)<!-- -->
+
+``` r
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+df <- read.csv("COLE_NETWORKS_PCC_ACC_ALL_G.csv")
+df = df %>% filter(Group != 'Out')
+
+df_long <- df %>%
+  pivot_longer(cols = starts_with("ACC"), # Only select G1_ACC, G2_ACC, G3_ACC
+               names_to = "Gradient", 
+               values_to = "Accuracy")
+
+# Check if it worked
+head(df_long)
+```
+
+    ## # A tibble: 6 × 5
+    ##   Network Group        Day Gradient Accuracy
+    ##   <chr>   <chr>      <int> <chr>       <dbl>
+    ## 1 Default Hetromodal     3 ACC_G1       93.3
+    ## 2 Default Hetromodal     3 ACC_G2       40  
+    ## 3 Default Hetromodal     3 ACC_G3       73.3
+    ## 4 Default Hetromodal    30 ACC_G1       76.7
+    ## 5 Default Hetromodal    30 ACC_G2       36.7
+    ## 6 Default Hetromodal    30 ACC_G3       60
+
+``` r
+# Make sure Group is a factor
+df_long$Group <- as.factor(df_long$Group)
+
+# Summary for Bar Plot
+df_summary <- df_long %>%
+  group_by(Group, Gradient) %>%
+  summarise(Mean_ACC = mean(Accuracy),
+            SD_ACC = sd(Accuracy),
+            .groups = 'drop')
+```
+
+``` r
+plot<- ggplot(df_long, aes(x = Group, y = Accuracy, fill = Group)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_jitter(shape = 16, position = position_jitter(0.2), size = 2, aes(color = Group)) +
+  facet_wrap(~ Gradient, scales = "free_y") +
+  labs(title = "COLE Accuracy by Group and Gradient", y = "Accuracy", x = "Group") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_fill_manual(values = c("#00AFBB", "#E7B800")) +
+  scale_color_manual(values = c("#00AFBB", "#E7B800"))+
+  scale_y_continuous(limits=c(10, 100), breaks=seq(10,100,by=20))
+ggsave("COLE_PCC_ACC_MEAN_ALL_G.png", plot, width=12, height=6)
+plot
+```
+
+![](fig4_networks_gradients_accuracy_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
+df = df %>% filter(Group != 'Out')
+# Assuming your data is in a dataframe called 'df'
+# Convert group to a factor for better control
+df$Group <- as.factor(df$Group)
+
+# Step 1: Checking normality per group
+# Shapiro-Wilk test for G1_ACC in each group
+shapiro_hetro_G1 <- shapiro.test(df %>% filter(Group == "Hetromodal") %>% pull(ACC_G1))
+shapiro_uni_G1 <- shapiro.test(df %>% filter(Group == "Unimodal") %>% pull(ACC_G1))
+
+# Similarly for G2_ACC and G3_ACC
+shapiro_hetro_G2 <- shapiro.test(df %>% filter(Group == "Hetromodal") %>% pull(ACC_G2))
+shapiro_uni_G2 <- shapiro.test(df %>% filter(Group == "Unimodal") %>% pull(ACC_G2))
+
+shapiro_hetro_G3 <- shapiro.test(df %>% filter(Group == "Hetromodal") %>% pull(ACC_G3))
+shapiro_uni_G3 <- shapiro.test(df %>% filter(Group == "Unimodal") %>% pull(ACC_G3))
+
+# Step 2: T-test or Wilcoxon test depending on normality
+
+# Assuming normality holds, we do a t-test
+t_test_G1 <- t.test(ACC_G1 ~ Group, data = df)
+t_test_G2 <- t.test(ACC_G2 ~ Group, data = df)
+t_test_G3 <- t.test(ACC_G3 ~ Group, data = df)
+
+# If the normality assumption does not hold, use Wilcoxon test (non-parametric)
+wilcox_test_G1 <- wilcox.test(ACC_G1 ~ Group, data = df)
+```
+
+    ## Warning in wilcox.test.default(x = DATA[[1L]], y = DATA[[2L]], ...): cannot
+    ## compute exact p-value with ties
+
+``` r
+wilcox_test_G2 <- wilcox.test(ACC_G2 ~ Group, data = df)
+```
+
+    ## Warning in wilcox.test.default(x = DATA[[1L]], y = DATA[[2L]], ...): cannot
+    ## compute exact p-value with ties
+
+``` r
+wilcox_test_G3 <- wilcox.test(ACC_G3 ~ Group, data = df)
+```
+
+    ## Warning in wilcox.test.default(x = DATA[[1L]], y = DATA[[2L]], ...): cannot
+    ## compute exact p-value with ties
+
+``` r
+# Print the results
+t_test_G1
+```
+
+    ## 
+    ##  Welch Two Sample t-test
+    ## 
+    ## data:  ACC_G1 by Group
+    ## t = 9.5141, df = 17.743, p-value = 2.177e-08
+    ## alternative hypothesis: true difference in means between group Hetromodal and group Unimodal is not equal to 0
+    ## 95 percent confidence interval:
+    ##  17.09358 26.79531
+    ## sample estimates:
+    ## mean in group Hetromodal   mean in group Unimodal 
+    ##                 85.27778                 63.33333
+
+``` r
+t_test_G2
+```
+
+    ## 
+    ##  Welch Two Sample t-test
+    ## 
+    ## data:  ACC_G2 by Group
+    ## t = -0.37446, df = 12.977, p-value = 0.7141
+    ## alternative hypothesis: true difference in means between group Hetromodal and group Unimodal is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -16.92598  11.92598
+    ## sample estimates:
+    ## mean in group Hetromodal   mean in group Unimodal 
+    ##                 48.33333                 50.83333
+
+``` r
+t_test_G3
+```
+
+    ## 
+    ##  Welch Two Sample t-test
+    ## 
+    ## data:  ACC_G3 by Group
+    ## t = 6.212, df = 9.1106, p-value = 0.0001487
+    ## alternative hypothesis: true difference in means between group Hetromodal and group Unimodal is not equal to 0
+    ## 95 percent confidence interval:
+    ##  20.15629 43.17704
+    ## sample estimates:
+    ## mean in group Hetromodal   mean in group Unimodal 
+    ##                 70.00000                 38.33333
+
+``` r
+# If using Wilcoxon tests
+wilcox_test_G1
+```
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  ACC_G1 by Group
+    ## W = 96, p-value = 0.0002232
+    ## alternative hypothesis: true location shift is not equal to 0
+
+``` r
+wilcox_test_G2
+```
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  ACC_G2 by Group
+    ## W = 43, p-value = 0.7272
+    ## alternative hypothesis: true location shift is not equal to 0
+
+``` r
+wilcox_test_G3
+```
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  ACC_G3 by Group
+    ## W = 96, p-value = 0.0002307
+    ## alternative hypothesis: true location shift is not equal to 0
+
+``` r
+shapiro_hetro_G1
+```
+
+    ## 
+    ##  Shapiro-Wilk normality test
+    ## 
+    ## data:  df %>% filter(Group == "Hetromodal") %>% pull(ACC_G1)
+    ## W = 0.90014, p-value = 0.1593
+
+``` r
+shapiro_hetro_G2
+```
+
+    ## 
+    ##  Shapiro-Wilk normality test
+    ## 
+    ## data:  df %>% filter(Group == "Hetromodal") %>% pull(ACC_G2)
+    ## W = 0.9487, p-value = 0.6181
+
+``` r
+shapiro_hetro_G3
+```
+
+    ## 
+    ##  Shapiro-Wilk normality test
+    ## 
+    ## data:  df %>% filter(Group == "Hetromodal") %>% pull(ACC_G3)
+    ## W = 0.92769, p-value = 0.3563
