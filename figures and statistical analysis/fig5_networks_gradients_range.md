@@ -212,14 +212,14 @@ print(cor_test)
 ``` r
 # Create scatter plots for each network
 plot <- ggplot(all_var_acc, aes(x = as.numeric(variance), y = as.numeric(mean_acc), color = Network, shape = Gradient)) +
-  geom_point(size=3) +
+  geom_point(size=5) +
   labs(title = "Scatter Plot of variance vs Accuracy for Each Network",
        x = "variance",
        y = "Accuracy") +
   theme_minimal() +
   scale_fill_manual(values = c('#CD3E4E','#E69422', '#BE3AFA', '#00760E', '#781286', '#4682B4')) +
   scale_color_manual(values = c('#CD3E4E','#E69422', '#BE3AFA', '#00760E', '#781286', '#4682B4')) +
-  scale_shape_manual(values = c("G1" = 16, "G2" = 17, "G3" = 18)) +
+  scale_shape_manual(values = c("G1" = 16, "G2" = 17, "G3" = 8)) +
   scale_y_continuous(limits=c(0, 95), breaks=seq(0,75,by=25))+
   theme(legend.position = "none")
   # Ensures y-axis is treated as continuous
@@ -428,17 +428,18 @@ cole_custom_colors <- c(
 )
 # Create scatter plots for each network
 plot<- ggplot(cole_all_var_acc, aes(x = as.numeric(variance), y = as.numeric(mean_acc), color = Network, shape = Gradient)) +
-  geom_point(size=3) +
+  geom_point(size=5) +
   labs(title = "Scatter Plot of variance vs Accuracy for Each Network",
        x = "variance",
        y = "Accuracy") +
   theme_minimal() +
     scale_fill_manual(values = cole_custom_colors) +
   scale_color_manual(values = cole_custom_colors) +
-  scale_shape_manual(values = c("G1" = 16, "G2" = 17, "G3" = 18)) +
+  scale_shape_manual(values = c("G1" = 16, "G2" = 17, "G3" = 8)) +
   scale_x_continuous(limits=c(0, 75), breaks=seq(0,75,by=25))+
-  scale_y_continuous(limits=c(0, 90), breaks=seq(0,75,by=25))
-  ggsave(file="COLE_variance_num_accuracy_correlation_new_with_fixed_limits.png", plot, width=6, height=5, dpi=400)
+  scale_y_continuous(limits=c(0, 90), breaks=seq(0,75,by=25))+
+  theme(legend.position = "none")
+  ggsave(file="COLE_variance_num_accuracy_correlation_new_with_fixed_limits_V2.png", plot, width=6, height=5, dpi=400)
 plot
 ```
 
