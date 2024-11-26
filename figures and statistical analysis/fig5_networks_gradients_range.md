@@ -176,13 +176,13 @@ all_var_acc$Network =factor(all_var_acc$Network,levels=c('DMN','FPN','SN','DAN',
 head(all_var_acc)
 ```
 
-    ##   Gradient Network variance mean_acc
-    ## 1       G1     DMN 42.21448 81.66667
-    ## 2       G1     FPN 30.32214 90.00000
-    ## 3       G1      SN 37.77378 85.00000
-    ## 4       G1     SMN  9.56666 58.33333
-    ## 5       G1      VN 20.05518 70.00000
-    ## 6       G1     DAN 41.25360 91.66667
+    ##   Gradient Network variance mean_acc vert_num
+    ## 1       G1     DMN 42.21448 81.66667     3837
+    ## 2       G1     FPN 30.32214 90.00000     2434
+    ## 3       G1      SN 37.77378 85.00000     2301
+    ## 4       G1     SMN  9.56666 58.33333     3749
+    ## 5       G1      VN 20.05518 70.00000     2760
+    ## 6       G1     DAN 41.25360 91.66667     2196
 
 ``` r
 correlation <- cor(as.numeric(all_var_acc$mean_acc), as.numeric(all_var_acc$variance))
@@ -220,7 +220,7 @@ plot <- ggplot(all_var_acc, aes(x = as.numeric(variance), y = as.numeric(mean_ac
   scale_fill_manual(values = c('#CD3E4E','#E69422', '#BE3AFA', '#00760E', '#781286', '#4682B4')) +
   scale_color_manual(values = c('#CD3E4E','#E69422', '#BE3AFA', '#00760E', '#781286', '#4682B4')) +
   scale_shape_manual(values = c("G1" = 16, "G2" = 17, "G3" = 8)) +
-  scale_y_continuous(limits=c(0, 95), breaks=seq(0,75,by=25))+
+  scale_y_continuous(limits=c(0, 95), breaks=seq(0,95,by=25))+
   theme(legend.position = "none")
   # Ensures y-axis is treated as continuous
   ggsave(file="Yeo_variance_accuracy_correlation_new_fixed_limits.png", plot, width=5, height=5, dpi=400)
@@ -377,13 +377,13 @@ cole_all_var_acc$Network =factor(cole_all_var_acc$Network,levels=cole_networks)
 head(cole_all_var_acc)
 ```
 
-    ##   Gradient              Network variance mean_acc
-    ## 1       G1     Dorsal-Attention 40.04148 90.00000
-    ## 2       G1       Frontoparietal 37.38539 88.33333
-    ## 3       G1              Default 40.38383 85.00000
-    ## 4       G1    Cingulo-Opercular 65.89165 83.33333
-    ## 5       G1             Language 64.99089 85.00000
-    ## 6       G1 Posterior-Multimodal 60.11883 80.00000
+    ##   Gradient              Network variance mean_acc vert_num
+    ## 1       G1     Dorsal-Attention 40.04148 90.00000     1294
+    ## 2       G1       Frontoparietal 37.38539 88.33333     2547
+    ## 3       G1              Default 40.38383 85.00000     3391
+    ## 4       G1    Cingulo-Opercular 65.89165 83.33333     3007
+    ## 5       G1             Language 64.99089 85.00000     1096
+    ## 6       G1 Posterior-Multimodal 60.11883 80.00000      289
 
 ``` r
 # Calculate the correlation
@@ -437,10 +437,71 @@ plot<- ggplot(cole_all_var_acc, aes(x = as.numeric(variance), y = as.numeric(mea
   scale_color_manual(values = cole_custom_colors) +
   scale_shape_manual(values = c("G1" = 16, "G2" = 17, "G3" = 8)) +
   scale_x_continuous(limits=c(0, 75), breaks=seq(0,75,by=25))+
-  scale_y_continuous(limits=c(0, 90), breaks=seq(0,75,by=25))+
+  scale_y_continuous(limits=c(0, 100), breaks=seq(0,100,by=25))+
   theme(legend.position = "none")
   ggsave(file="COLE_variance_num_accuracy_correlation_new_with_fixed_limits_V2.png", plot, width=6, height=5, dpi=400)
 plot
 ```
 
 ![](fig5_networks_gradients_range_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+
+``` r
+# Create scatter plots for each network
+plot <- ggplot(cole_all_var_acc, aes(x = as.numeric(variance), y = as.numeric(mean_acc))) +
+  geom_point(size=5) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Scatter Plot of variance vs Accuracy for Each Network",
+       x = "Variance",
+       y = "Accuracy") +
+  theme_minimal() +
+  #scale_shape_manual(values = c("G1" = 16, "G2" = 17, "G3" = 8)) +
+  scale_x_continuous(limits=c(0, 75), breaks=seq(0,75,by=25))+
+  scale_y_continuous(limits=c(0, 100), breaks=seq(0,100,by=25))
+  ggsave(file="Cole_variance_accuracy_correlation_with_red_lines.png", plot, width=6, height=5, dpi=400)
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+``` r
+plot
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+![](fig5_networks_gradients_range_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+
+``` r
+# Load the ppcor package
+library(ppcor)
+```
+
+    ## Warning: package 'ppcor' was built under R version 4.2.3
+
+    ## Loading required package: MASS
+
+    ## Warning: package 'MASS' was built under R version 4.2.3
+
+    ## 
+    ## Attaching package: 'MASS'
+
+    ## The following object is masked from 'package:plotly':
+    ## 
+    ##     select
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     select
+
+``` r
+# Sample data
+df <- read.csv("cole_variance_acc.csv")
+
+# Calculate partial correlation
+result <- pcor.test(df$variance, df$mean_acc, df$vert_num)
+
+# Print the result
+print(result)
+```
+
+    ##    estimate      p.value statistic  n gp  Method
+    ## 1 0.7440595 3.008346e-07  6.397561 36  1 pearson
