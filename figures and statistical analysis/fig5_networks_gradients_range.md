@@ -24,6 +24,7 @@ library(tidyverse)
 library(svglite)
 library(viridis)
 library(ReX)
+library(ppcor)
 ```
 
 ``` r
@@ -146,8 +147,7 @@ print(average_accuracy)
 ``` r
 net_df <- net_df %>%
   left_join(average_accuracy, by = "Network") %>%
-  mutate(mean_acc = Mean_Accuracy) %>%
-  select(-Mean_Accuracy) 
+  mutate(mean_acc = average_accuracy$Mean_Accuracy)
 net_df$Network = factor(net_df$Network, levels = c('DMN','FPN','SN','DAN','VN','SMN'))
 
 head(net_df)
@@ -160,13 +160,13 @@ head(net_df)
     ## 4     SMN 13.0116829029787 3.60717103877523 5.31508253062433   20.46236704663
     ## 5      VN 4.73533417222078 2.17608229904588 1.62971045021714 18.6350058054288
     ## 6     DAN 21.1647767933091 4.60051918736452 6.86558775887111 23.1258055009603
-    ##                mad mean_acc
-    ## 1  3.7736466854875 71.66667
-    ## 2 4.84671603203517 76.66667
-    ## 3 3.25608334618792 66.66667
-    ## 4 2.96598624996119 41.66667
-    ## 5 1.48246969242064 45.00000
-    ## 6 3.81741980582261 81.66667
+    ##                mad mean_acc Mean_Accuracy
+    ## 1  3.7736466854875 81.66667      71.66667
+    ## 2 4.84671603203517 71.66667      76.66667
+    ## 3 3.25608334618792 76.66667      66.66667
+    ## 4 2.96598624996119 41.66667      41.66667
+    ## 5 1.48246969242064 66.66667      45.00000
+    ## 6 3.81741980582261 45.00000      81.66667
 
 ``` r
 all_var_acc <- read.csv("variance_acc_yeo.csv")
@@ -211,8 +211,9 @@ print(cor_test)
 
 ``` r
 # Create scatter plots for each network
-plot <- ggplot(all_var_acc, aes(x = as.numeric(variance), y = as.numeric(mean_acc), color = Network, shape = Gradient)) +
-  geom_point(size=5) +
+plot <- ggplot(all_var_acc, aes(x = as.numeric(variance), y = as.numeric(mean_acc))) +
+  geom_point(aes(color = as.factor(Network),shape = as.factor(Gradient)), size = 5) + # Points colored by group
+  geom_smooth(method = "lm", se = TRUE, color = "black", fill = "lightgray",level = 0.99) + # Single regression line
   labs(title = "Scatter Plot of variance vs Accuracy for Each Network",
        x = "variance",
        y = "Accuracy") +
@@ -223,9 +224,16 @@ plot <- ggplot(all_var_acc, aes(x = as.numeric(variance), y = as.numeric(mean_ac
   scale_y_continuous(limits=c(0, 95), breaks=seq(0,95,by=25))+
   theme(legend.position = "none")
   # Ensures y-axis is treated as continuous
-  ggsave(file="Yeo_variance_accuracy_correlation_new_fixed_limits.png", plot, width=5, height=5, dpi=400)
+  ggsave(file="Yeo_variance_accuracy_correlation_linear_5.png", plot, width=5, height=5, dpi=400)
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+``` r
 plot
 ```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
 
 ![](fig5_networks_gradients_range_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
@@ -265,9 +273,11 @@ unique_names
     ## [13] ""
 
 ``` r
-cole_networks <- c("Dorsal-Attention","Frontoparietal","Default","Cingulo-Opercular","Language","Posterior-Multimodal","Ventral-Multimodal","Orbito-Affective","Visual2", "Somatomotor","Visual1","Auditory")
+cole_networks <- c("Dorsal-Attention","Frontoparietal","Default","Cingulo-Opercular","Language","Posterior-Multimodal","Visual2", "Somatomotor","Visual1","Auditory")
 data$cole = cole$cole_name
 data = data %>% filter(cole != '')
+data = data  %>% filter(cole != 'Ventral-Multimodal')
+data = data  %>% filter(cole != 'Orbito-Affective')
 data$cole = factor(data$cole, levels = cole_networks)
 ```
 
@@ -318,11 +328,14 @@ average_accuracy <- acc_data %>%
   group_by(Network) %>%
   summarise(Mean_Accuracy = mean(Accuracy))
 
+
+average_accuracy = average_accuracy  %>% filter(Network != 'Ventral-Multimodal')
+average_accuracy = average_accuracy  %>% filter(Network != 'Orbito-Affective')
 # Print the result
 print(average_accuracy)
 ```
 
-    ## # A tibble: 12 × 2
+    ## # A tibble: 10 × 2
     ##    Network              Mean_Accuracy
     ##    <chr>                        <dbl>
     ##  1 Auditory                      28.3
@@ -331,18 +344,15 @@ print(average_accuracy)
     ##  4 Dorsal-Attention              76.7
     ##  5 Frontoparietal                75  
     ##  6 Language                      65  
-    ##  7 Orbito-Affective              16.7
-    ##  8 Posterior-Multimodal          65  
-    ##  9 Somatomotor                   48.3
-    ## 10 Ventral-Multimodal            18.3
-    ## 11 Visual1                       26.7
-    ## 12 Visual2                       50
+    ##  7 Posterior-Multimodal          65  
+    ##  8 Somatomotor                   48.3
+    ##  9 Visual1                       26.7
+    ## 10 Visual2                       50
 
 ``` r
 net_df <- net_df %>%
   left_join(average_accuracy, by = "Network") %>%
-  mutate(mean_acc = Mean_Accuracy) %>%
-  select(-Mean_Accuracy) 
+  mutate(mean_acc = average_accuracy$Mean_Accuracy)
 net_df$Network = factor(net_df$Network, levels = cole_networks)
 
 head(net_df)
@@ -355,13 +365,13 @@ head(net_df)
     ## 4    Cingulo-Opercular 20.0655902269906  4.4794631628121 6.19517277628628
     ## 5             Language 26.4477246142539 5.14273512970034 6.38906693978027
     ## 6 Posterior-Multimodal 7.85851699661961 2.80330465640458 2.88071557544861
-    ##              range              mad mean_acc
-    ## 1 24.3363427690216 3.77396523030854 76.66667
-    ## 2  28.625248356253 5.48877211754758 75.00000
-    ## 3  25.191149819664 3.39347627158593 66.66667
-    ## 4 25.3021911144203 3.63429462856912 71.66667
-    ## 5 25.0216414582125 4.03400964430889 65.00000
-    ## 6  14.670008995278 2.09271125822893 65.00000
+    ##              range              mad mean_acc Mean_Accuracy
+    ## 1 24.3363427690216 3.77396523030854 28.33333      76.66667
+    ## 2  28.625248356253 5.48877211754758 71.66667      75.00000
+    ## 3  25.191149819664 3.39347627158593 66.66667      66.66667
+    ## 4 25.3021911144203 3.63429462856912 76.66667      71.66667
+    ## 5 25.0216414582125 4.03400964430889 75.00000      65.00000
+    ## 6  14.670008995278 2.09271125822893 65.00000      65.00000
 
 ``` r
 # Calculate the correlation
@@ -369,11 +379,14 @@ correlation <- cor(as.numeric(net_df$mean_acc), as.numeric(net_df$variance))
 print(paste("Correlation coefficient:", correlation))
 ```
 
-    ## [1] "Correlation coefficient: 0.77139942500347"
+    ## [1] "Correlation coefficient: 0.442743047886174"
 
 ``` r
 cole_all_var_acc <- read.csv("cole_variance_acc.csv")
+cole_all_var_acc = cole_all_var_acc  %>% filter(Network != 'Ventral-Multimodal')
+cole_all_var_acc = cole_all_var_acc  %>% filter(Network != 'Orbito-Affective')
 cole_all_var_acc$Network =factor(cole_all_var_acc$Network,levels=cole_networks)
+
 head(cole_all_var_acc)
 ```
 
@@ -391,7 +404,7 @@ correlation <- cor(as.numeric(cole_all_var_acc$mean_acc), as.numeric(cole_all_va
 print(paste("Correlation coefficient:", correlation))
 ```
 
-    ## [1] "Correlation coefficient: 0.746696944721688"
+    ## [1] "Correlation coefficient: 0.756715308311728"
 
 ``` r
 # Perform correlation test
@@ -403,13 +416,13 @@ print(cor_test)
     ##  Pearson's product-moment correlation
     ## 
     ## data:  as.numeric(cole_all_var_acc$mean_acc) and as.numeric(cole_all_var_acc$variance)
-    ## t = 6.5457, df = 34, p-value = 1.7e-07
+    ## t = 6.125, df = 28, p-value = 1.308e-06
     ## alternative hypothesis: true correlation is not equal to 0
     ## 95 percent confidence interval:
-    ##  0.5540883 0.8634211
+    ##  0.5450339 0.8777038
     ## sample estimates:
     ##       cor 
-    ## 0.7466969
+    ## 0.7567153
 
 ``` r
 cole_custom_colors <- c(
@@ -419,16 +432,16 @@ cole_custom_colors <- c(
   "#990099",  # Cingulo-Opercular
   "#009A9A",  # Language
   "#B15928",  # Posterior-Multimodal
-  "#FF9C00",  # Ventral-Multimodal
-  "#417C00",  # Orbito-Affective
   "#00FFFF",  # Somatomotor
   "#0000FF",  # Visual1
   "#6400FF",  # Visual2
   "#F93DFB"   # Auditory
 )
+
 # Create scatter plots for each network
-plot<- ggplot(cole_all_var_acc, aes(x = as.numeric(variance), y = as.numeric(mean_acc), color = Network, shape = Gradient)) +
-  geom_point(size=5) +
+plot<- ggplot(cole_all_var_acc, aes(x = as.numeric(variance), y = as.numeric(mean_acc))) +
+  geom_point(aes(color = as.factor(Network),shape = as.factor(Gradient)), size = 5) + # Points colored by group
+  geom_smooth(method = "lm", se = TRUE, color = "black", fill = "lightgray",level = 0.99) + # Single regression line
   labs(title = "Scatter Plot of variance vs Accuracy for Each Network",
        x = "variance",
        y = "Accuracy") +
@@ -439,62 +452,24 @@ plot<- ggplot(cole_all_var_acc, aes(x = as.numeric(variance), y = as.numeric(mea
   scale_x_continuous(limits=c(0, 75), breaks=seq(0,75,by=25))+
   scale_y_continuous(limits=c(0, 100), breaks=seq(0,100,by=25))+
   theme(legend.position = "none")
-  ggsave(file="COLE_variance_num_accuracy_correlation_new_with_fixed_limits_V2.png", plot, width=6, height=5, dpi=400)
+  ggsave(file="COLE_variance_num_accuracy_correlation_linear_5_new.png", plot, width=6, height=5, dpi=400)
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+``` r
 plot
 ```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
 
 ![](fig5_networks_gradients_range_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 ``` r
-# Create scatter plots for each network
-plot <- ggplot(cole_all_var_acc, aes(x = as.numeric(variance), y = as.numeric(mean_acc))) +
-  geom_point(size=5) +
-  geom_smooth(method = "lm", se = FALSE, color = "red") +
-  labs(title = "Scatter Plot of variance vs Accuracy for Each Network",
-       x = "Variance",
-       y = "Accuracy") +
-  theme_minimal() +
-  #scale_shape_manual(values = c("G1" = 16, "G2" = 17, "G3" = 8)) +
-  scale_x_continuous(limits=c(0, 75), breaks=seq(0,75,by=25))+
-  scale_y_continuous(limits=c(0, 100), breaks=seq(0,100,by=25))
-  ggsave(file="Cole_variance_accuracy_correlation_with_red_lines.png", plot, width=6, height=5, dpi=400)
-```
-
-    ## `geom_smooth()` using formula = 'y ~ x'
-
-``` r
-plot
-```
-
-    ## `geom_smooth()` using formula = 'y ~ x'
-
-![](fig5_networks_gradients_range_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
-
-``` r
-# Load the ppcor package
-library(ppcor)
-```
-
-    ## Warning: package 'ppcor' was built under R version 4.2.3
-
-    ## Loading required package: MASS
-
-    ## Warning: package 'MASS' was built under R version 4.2.3
-
-    ## 
-    ## Attaching package: 'MASS'
-
-    ## The following object is masked from 'package:plotly':
-    ## 
-    ##     select
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     select
-
-``` r
 # Sample data
 df <- read.csv("cole_variance_acc.csv")
+df = df  %>% filter(Network != 'Ventral-Multimodal')
+df = df  %>% filter(Network != 'Orbito-Affective')
 
 # Calculate partial correlation
 result <- pcor.test(df$variance, df$mean_acc, df$vert_num)
@@ -504,4 +479,4 @@ print(result)
 ```
 
     ##    estimate      p.value statistic  n gp  Method
-    ## 1 0.7440595 3.008346e-07  6.397561 36  1 pearson
+    ## 1 0.7602905 1.706241e-06  6.081724 30  1 pearson

@@ -135,10 +135,6 @@ ggdraw(p2)
 ![](fig1_gradients_cloud_files/figure-gfm/plot_gradient_cloud-2.png)<!-- -->
 
 ``` r
-#ggsave(file="Paper_Cloud-G1_Day30-G3_Day30.png", p2, width=6, height=5, dpi=400)
-```
-
-``` r
 # Reshape data to a long format to make it easier to plot Day 3 and Day 30 together
 df_long <- data %>%
   pivot_longer(cols = starts_with("G"), names_to = "Gradient_Day", values_to = "Value") %>%
@@ -151,102 +147,66 @@ df_filtered <- df_long %>%
 ```
 
 ``` r
-filteredData<- df_filtered %>% filter(YeoNets == 'VN')
-p3 <- ggplot(df_filtered, aes(x = G1, y = G2, color = YeoNets)) +
+G1$G1_Subj11_Day1 <- G1$sub.11.ses.1
+G1$G1_Subj11_Day3 <- G1$sub.11.ses.2
+G1$G1_Subj11_Day30 <- G1$sub.11.ses.3
+
+
+G1$G2_Subj11_Day1 <- G2$sub.11.ses.1
+G1$G2_Subj11_Day3 <- G2$sub.11.ses.2
+G1$G2_Subj11_Day30 <- G2$sub.11.ses.3
+
+
+G1$G3_Subj11_Day1 <- G3$sub.11.ses.1
+G1$G3_Subj11_Day3 <- G3$sub.11.ses.2
+G1$G3_Subj11_Day30 <- G3$sub.11.ses.3
+```
+
+``` r
+# Load necessary libraries
+library(ggplot2)
+library(tidyr)
+
+# Assuming your data has columns for Day10, Day20, and Day30:
+# Reshape data to long format
+longData <- G1 %>%
+  pivot_longer(
+    cols = starts_with("G1_Subj11_Day"), # Assuming columns like G1_Subj11_Day10, G1_Subj11_Day20, G1_Subj11_Day30
+    names_to = "Day",
+    values_to = "G1_subj11"
+  ) %>%
+  mutate(
+    G3_subj11 = case_when(
+      Day == "G1_Subj11_Day1" ~ G3_Subj11_Day1,
+      Day == "G1_Subj11_Day3" ~ G3_Subj11_Day3,
+      Day == "G1_Subj11_Day30" ~ G3_Subj11_Day30
+    ),
+    Day = gsub("G1_Subj11_", "", Day)  # Extract just the day part for labeling
+  )
+```
+
+``` r
+longData <- longData %>% filter(YeoNets != 'LN')
+p <- ggplot(longData, aes(x = G1_subj11, y = G3_subj11, color = YeoNets)) +
   geom_point(alpha = 0.7) +
-  facet_wrap(~ Day, ncol = 3) +  # Specify the number of columns (optional, already in 3 columns here)
-  labs(title = "Comparison Across Days", x = "G1", y = "G2") +
+  labs(title = "Comparison Across Days for Subject 11", x = "G1", y = "G3") +
   theme_minimal() +
-  scale_fill_manual(values = c('#CD3E4E', '#E69422', '#BE3AFA', '#00760E', '#4682B4', '#781286')) +
-  scale_color_manual(values = c('#CD3E4E', '#E69422', '#BE3AFA', '#00760E', '#4682B4', '#781286')) +
+  scale_fill_manual(values = c('#00760E','#E69422', '#CD3E4E','#BE3AFA', '#4682B4', '#781286')) +
+  scale_color_manual(values = c('#00760E','#E69422', '#CD3E4E','#BE3AFA', '#4682B4', '#781286')) +
   theme(
     legend.position = "bottom",
-    panel.spacing = unit(2, "lines")  # Adjusts the space between facets
-  )
+    panel.spacing = unit(2, "lines"),  # Adjust space between facets
+    panel.grid.major = element_blank(),  # Remove major grid lines
+    panel.grid.minor = element_blank()   # Remove minor grid lines
+  ) +
+  facet_wrap(~ Day, ncol = 1) +  # Create subplots for each day
+  xlim(-22, 30) +
+  ylim(-20, 35)
 
 # Save the plot
-#ggsave(file = "Paper_comparison_across_days_G1_G2.png", p3, width = 15, height = 8, dpi = 400)  # Increased width for more space
-p3
+ggsave(file = "Subj11_Paper_comparison_across_days_G1_G3.png", p, width = 15, height = 30, dpi = 400)
+
+p
 ```
 
 ![](fig1_gradients_cloud_files/figure-gfm/Comparison%20Across%20Days-1.png)<!-- -->
-
-``` r
-# Define a helper function to process each gradient data frame
-process_gradient <- function(data, col_names, gradient_label) {
-  data %>%
-    select(all_of(col_names)) %>%
-    pivot_longer(cols = everything(), names_to = "Subject_Session", values_to = "Value") %>%
-    mutate(Day = case_when(
-      grepl("ses.1", Subject_Session) ~ "Day 1",
-      grepl("ses.2", Subject_Session) ~ "Day 3",
-      grepl("ses.3", Subject_Session) ~ "Day 30"
-    ),
-    Gradient = gradient_label)
-}
-
-# Define the main function to get the subject data for each gradient
-get_subject_data <- function(subject_num) {
-  # Define the column names dynamically based on the subject number
-  col_names <- paste0("sub.", subject_num, ".ses.", 1:3)
-  
-  # Process each gradient data frame using the helper function
-  df_g1 <- process_gradient(G1, col_names, "G1")
-  df_g2 <- process_gradient(G2, col_names, "G2")
-  df_g3 <- process_gradient(G3, col_names, "G3")
-  
-  # Combine the data frames
-  combined_df <- bind_rows(df_g1, df_g2, df_g3)
-  
-  # Return the combined data frame
-  return(combined_df)
-}
-
-# Example usage for subject 29
-df_sub10 <- get_subject_data(10)
-print(df_sub10)
-```
-
-    ## # A tibble: 168,435 × 4
-    ##    Subject_Session Value Day    Gradient
-    ##    <chr>           <dbl> <chr>  <chr>   
-    ##  1 sub.10.ses.1    21.3  Day 1  G1      
-    ##  2 sub.10.ses.2    13.2  Day 3  G1      
-    ##  3 sub.10.ses.3     9.18 Day 30 G1      
-    ##  4 sub.10.ses.1     8.04 Day 1  G1      
-    ##  5 sub.10.ses.2     5.78 Day 3  G1      
-    ##  6 sub.10.ses.3     2.08 Day 30 G1      
-    ##  7 sub.10.ses.1     7.73 Day 1  G1      
-    ##  8 sub.10.ses.2    17.8  Day 3  G1      
-    ##  9 sub.10.ses.3     2.03 Day 30 G1      
-    ## 10 sub.10.ses.1    18.6  Day 1  G1      
-    ## # ℹ 168,425 more rows
-
-``` r
-filteredData_G3<- df_long %>% filter(Gradient == 'G3')
-
-p2 <- ggplot(filteredData_G3, aes(x = Value, y = Gradient, linetype = Day)) +
-  geom_density_ridges(color = "black", fill = NA, linewidth = 1.5) +  # Set line color to black
-  scale_x_continuous(limits = c(-25, 35)) +
-  scale_y_discrete(expand = c(0, 0)) +
-  scale_linetype_manual(values = c("solid", "dashed", "dotted")) +  # Set different line types for each day
-  coord_cartesian(clip = 'off') +
-  labs(y = '', title = 'Gradient 3 Across Days Average') +
-  theme_ridges() +
-  theme(
-    legend.position = 'right',
-    plot.title = element_text(face = 'bold', size = 20, hjust = 0.5)
-  )
-
-p2
-```
-
-    ## Picking joint bandwidth of 0.808
-
-![](fig1_gradients_cloud_files/figure-gfm/Gradient%203%20Across%20Days%20For%20Subj%2010-1.png)<!-- -->
-
-``` r
-ggsave(file="Paper_distribution_diff_All_G3_limited_axis_AVG.png", p2, width=6, height=5, dpi=400)
-```
-
-    ## Picking joint bandwidth of 0.808
